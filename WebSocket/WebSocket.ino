@@ -12,16 +12,20 @@ const int dns_port = 53;
 const int http_port = 80;
 const int ws_port = 1337;
 const int led_pin = 15;
+int T = 0;
 
 // Globals
 AsyncWebServer server(80);
 WebSocketsServer webSocket = WebSocketsServer(1337);
 char msg_buf[10];
 int led_state = 0;
+int temp = 22;
+float humidity = 100.1;
+char temp_buf[10];
 
 /***********************************************************
- * Functions
- */
+   Functions
+*/
 
 // Callback: receiving any WebSocket message
 void onWebSocketEvent(uint8_t client_num,
@@ -30,7 +34,7 @@ void onWebSocketEvent(uint8_t client_num,
                       size_t length) {
 
   // Figure out the type of WebSocket event
-  switch(type) {
+  switch (type) {
 
     // Client has disconnected
     case WStype_DISCONNECTED:
@@ -48,7 +52,6 @@ void onWebSocketEvent(uint8_t client_num,
 
     // Handle text messages from client
     case WStype_TEXT:
-
       // Print out raw message
       Serial.printf("[%u] Received text: %s\n", client_num, payload);
 
@@ -56,15 +59,17 @@ void onWebSocketEvent(uint8_t client_num,
       if ( strcmp((char *)payload, "toggleLED") == 0 ) {
         led_state = led_state ? 0 : 1;
         Serial.printf("Toggling LED to %u\n", led_state);
-        digitalWrite(led_pin, led_state);
+        digitalWrite(led_pin, HIGH);
+        delay(100);
+        digitalWrite(led_pin, LOW);
 
-      // Report the state of the LED
+        // Report the state of the LED
       } else if ( strcmp((char *)payload, "getLEDState") == 0 ) {
         sprintf(msg_buf, "%d", led_state);
         Serial.printf("Sending to [%u]: %s\n", client_num, msg_buf);
         webSocket.sendTXT(client_num, msg_buf);
 
-      // Message not recognized
+        // Message not recognized
       } else {
         Serial.println("[%u] Message not recognized");
       }
@@ -86,7 +91,7 @@ void onWebSocketEvent(uint8_t client_num,
 void onIndexRequest(AsyncWebServerRequest *request) {
   IPAddress remote_ip = request->client()->remoteIP();
   Serial.println("[" + remote_ip.toString() +
-                  "] HTTP GET request of " + request->url());
+                 "] HTTP GET request of " + request->url());
   request->send(SPIFFS, "/index.html", "text/html");
 }
 
@@ -94,7 +99,7 @@ void onIndexRequest(AsyncWebServerRequest *request) {
 void onCSSRequest(AsyncWebServerRequest *request) {
   IPAddress remote_ip = request->client()->remoteIP();
   Serial.println("[" + remote_ip.toString() +
-                  "] HTTP GET request of " + request->url());
+                 "] HTTP GET request of " + request->url());
   request->send(SPIFFS, "/style.css", "text/css");
 }
 
@@ -102,13 +107,13 @@ void onCSSRequest(AsyncWebServerRequest *request) {
 void onPageNotFound(AsyncWebServerRequest *request) {
   IPAddress remote_ip = request->client()->remoteIP();
   Serial.println("[" + remote_ip.toString() +
-                  "] HTTP GET request of " + request->url());
+                 "] HTTP GET request of " + request->url());
   request->send(404, "text/plain", "Not found");
 }
 
 /***********************************************************
- * Main
- */
+   Main
+*/
 
 void setup() {
   // Init LED and turn off
@@ -119,9 +124,9 @@ void setup() {
   Serial.begin(115200);
 
   // Make sure we can read the file system
-  if( !SPIFFS.begin()){
+  if ( !SPIFFS.begin()) {
     Serial.println("Error mounting SPIFFS");
-    while(1);
+    while (1);
   }
 
   // Start access point
@@ -142,17 +147,19 @@ void setup() {
   // Handle requests for pages that do not exist
   server.onNotFound(onPageNotFound);
 
+
+
   // Start web server
   server.begin();
 
   // Start WebSocket server and assign callback
   webSocket.begin();
   webSocket.onEvent(onWebSocketEvent);
-  
+
 }
 
 void loop() {
-  
+
   // Look for and handle WebSocket data
   webSocket.loop();
 }

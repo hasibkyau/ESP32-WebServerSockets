@@ -1,140 +1,245 @@
 <!DOCTYPE html>
-<meta charset="utf-8" />
-<title>WebSocket Test</title>
 
+<head>
+    <meta charset="utf-8" />
+    <title>EcoLife IoT</title>
+    <style>
+        table {
+            border: 1px solid black;
+            border-collapse: collapse;
+            font-style: italic;
+        }
+
+        h1 {
+            font-style: oblique;
+            font-size: 2.5rem;
+            text-align: center;
+            text-shadow: blueviolet;
+            border: 5 px solid black;
+            color:red;
+        }
+
+        h2 {
+            font-family: Arial;
+            font-size: 1rem;
+            text-align: left;
+        }
+    </style>
+</head>
 <script language="javascript" type="text/javascript">
 
-var url = "ws://192.168.4.1:1337/";
-var output;
-var button;
-var canvas;
-var context;
-var msg;
+    var url = "ws://192.168.4.1:1337/";
+    var output;
+    var button;
+    var canvas;
+    var context;
+    var T;
+    //var msg;
 
-// This is called when the page finishes loading
-function init() {
+    // This is called when the page finishes loading
+    function init() {
 
-    // Assign page elements to variables
-    button = document.getElementById("toggleButton");
-    output = document.getElementById("output");
-    canvas = document.getElementById("led");
-    msg = document.getElementById("inputButton"); 
-    
-    // Draw circle in canvas
-    context = canvas.getContext("2d");
-    context.arc(25, 25, 15, 0, Math.PI * 2, false);
-    context.lineWidth = 3;
-    context.strokeStyle = "black";
-    context.stroke();
-    context.fillStyle = "black";
-    context.fill();
-    
-    // Connect to WebSocket server
-    wsConnect(url);
-}
+        // Assign page elements to variables
+        button = document.getElementById("toggleButton");
+        output = document.getElementById("output");
+        canvas = document.getElementById("led");
+        //msg = document.getElementById("inputButton");
 
-// Call this to connect to the WebSocket server
-function wsConnect(url) {
-    
-    // Connect to WebSocket server
-    websocket = new WebSocket(url);
-    
-    // Assign callbacks
-    websocket.onopen = function(evt) { onOpen(evt) };
-    websocket.onclose = function(evt) { onClose(evt) };
-    websocket.onmessage = function(evt) { onMessage(evt) };
-    websocket.onerror = function(evt) { onError(evt) };
-}
+        // Draw circle in canvas
+        context = canvas.getContext("2d");
+        context.arc(25, 25, 15, 0, Math.PI * 2, false);
+        context.lineWidth = 3;
+        context.strokeStyle = "black";
+        context.stroke();
+        context.fillStyle = "blue";
+        context.fill();
 
-// Called when a WebSocket connection is established with the server
-function onOpen(evt) {
-
-    // Log connection state
-    console.log("Connected");
-    
-    // Enable button
-    button.disabled = false;
-    
-    // Get the current state of the LED
-    doSend("getLEDState");
-}
-
-// Called when the WebSocket connection is closed
-function onClose(evt) {
-
-    // Log disconnection state
-    console.log("Disconnected");
-    
-    // Disable button
-    button.disabled = true;
-    
-    // Try to reconnect after a few seconds
-    setTimeout(function() { wsConnect(url) }, 2000);
-}
-
-// Called when a message is received from the server
-function onMessage(evt) {
-
-    // Print out our received message
-    console.log("Received: " + evt.data);
-    
-    // Update circle graphic with LED state
-    switch(evt.data) {
-        case "0":
-            console.log("LED is off");
-            context.fillStyle = "black";
-            context.fill();
-            break;
-        case "1":
-            console.log("LED is on");
-            context.fillStyle = "red";
-            context.fill();
-            break;
-        default:
-            break;
+        // Connect to WebSocket server
+        wsConnect(url);
     }
-}
 
-// Called when a WebSocket error occurs
-function onError(evt) {
-    console.log("ERROR: " + evt.data);
-}
+    // Call this to connect to the WebSocket server
+    function wsConnect(url) {
 
-// Sends a message to the server (and prints it to the console)
-function doSend(message) {
-    console.log("Sending: " + message);
-    websocket.send(message);
-}
+        // Connect to WebSocket server
+        websocket = new WebSocket(url);
 
-// Called whenever the HTML button is pressed
-function onPress() {
-    doSend("toggleLED");
-    doSend("getLEDState");
-}
+        // Assign callbacks
+        websocket.onopen = function (evt) { onOpen(evt) };
+        websocket.onclose = function (evt) { onClose(evt) };
+        websocket.onmessage = function (evt) { onMessage(evt) };
+        websocket.onerror = function (evt) { onError(evt) };
+    }
 
-function sendTemp() {
-    var temp = document.getElementById("input").value;
-    websocket.send("hello world");
-    doSend(temp);
-}
+    // Called when a WebSocket connection is established with the server
+    function onOpen(evt) {
 
-// Call the init function as soon as the page loads
-window.addEventListener("load", init, false);
+        // Log connection state
+        console.log("Connected");
+
+        // Enable button
+        button.disabled = false;
+
+        // Get the current state of the LED
+        doSend("getLEDState");
+    }
+
+    // Called when the WebSocket connection is closed
+    function onClose(evt) {
+
+        // Log disconnection state
+        console.log("Disconnected");
+
+        // Disable button
+        //button.disabled = true;
+
+        // Try to reconnect after a few seconds
+        setTimeout(function () { wsConnect(url) }, 2000);
+    }
+
+    // Called when a message is received from the server
+    function onMessage(evt) {
+
+        // Print out our received message
+        console.log("Received: " + evt.data);
+
+        // Update circle graphic with LED state
+        switch (evt.data) {
+            case "0":
+                console.log("LED is off");
+                context.fillStyle = "blue";
+                context.fill();
+                document.getElementById("toggleButton").innerHTML = "Manual";
+                break;
+            case "1":
+                console.log("LED is on");
+                context.fillStyle = "red";
+                context.fill();
+                document.getElementById("toggleButton").innerHTML = "Automated";
+                break;
+            default:
+                break;
+        }
+    }
+
+    // Called when a WebSocket error occurs
+    function onError(evt) {
+        console.log("ERROR: " + evt.data);
+    }
+
+    // Sends a message to the server (and prints it to the console)
+    function doSend(message) {
+        console.log("Sending: " + message);
+        websocket.send(message);
+    }
+
+    // Called whenever the HTML button is pressed
+    function onPress() {
+        doSend("toggleLED");
+        doSend("getLEDState");
+        //document.getElementById("WaterSpray").innerHTML = "ON";
+    }
+
+    function updateTemperature() {
+        // websocket.send("Update_Temperature");
+        var temperature = document.getElementById("inputTemperature").value;
+        document.getElementById("ExpectedTemperatureCell").innerHTML = temperature;
+        websocket.send("T" + temperature);
+        }
+    function updateHumidity() {
+        //websocket.send("Update_Humidity:");
+        var humidity = document.getElementById("inputHumidity").value;
+        document.getElementById("ExpectedHumidityCell").innerHTML = humidity;
+        websocket.send("H" + humidity);
+    }
+    function updatePressure() {
+        //websocket.send("update_Pressure:");
+        var pressure = document.getElementById("inputPressure").value;
+        websocket.send("P" + pressure);
+        document.getElementById("ExpectedPressureCell").innerHTML = pressure;
+        websocket.send("P" + pressure);
+    }
+
+    // Call the init function as soon as the page loads
+    window.addEventListener("load", init, false);
 
 </script>
 
-<h2>LED Control</h2>
+<h1>EcoLife Agro Farm</h1>
 
-<table>
+<table style="border: none;">
     <tr>
-        <td><button id="toggleButton" onclick="onPress()" disabled>Toggle LED</button></td>
+        <td><button id="toggleButton" onclick="onPress()">Water Spray</button></td>
         <td><canvas id="led" width="50" height="50"></canvas></td>
     </tr>
 </table>
 
+<h2 style="text-align: center;">Weather Station</h2>
+<table style="width:100%">
+    <tr>
+        <th>Current Weather</th>
+        <th>Expected Weather</th>
+
+    </tr>
+
+    <tr>
+        <td>temperature</td>
+        <td id="TemperatureCell">empty</td>
+        <td id="ExpectedTemperatureCell">nothing</td>
+    </tr>
+
+    <tr>
+        <td>humidity</td>
+        <td id="HumidityCell">empty</td>
+        <td id="ExpectedHumidityCell">nothing</td>
+    </tr>
+
+    <tr>
+        <td>pressure</td>
+        <td id="PressureCell">empty</td>
+        <td id="ExpectedPressureCell">nothing</td>
+    </tr>
+
+</table>
+<br><br>
+
+<h2>Update Expected Weather</h2>
 <table>
     <tr>
-        <td><input id="input"></td>
-        <td><button id="inputButton" onclick="sendTemp()">send</button></td>
+        <td>Temperature:</td>
+        <td><input id="inputTemperature" , value="22"></td>
+        <td><button id="sendTemperature" onclick="updateTemperature()">send</button></td>
+    </tr>
+
+    <tr>
+        <td>Humidity:</td>
+        <td><input id="inputHumidity" value="98"></td>
+        <td><button id="sendHumidity" onclick="updateHumidity()">send</button></td>
+    </tr>
+
+    <tr>
+        <td>Pressure:</td>
+        <td><input id="inputPressure" value="empty"></td>
+        <td><button id="sendPressure" onclick="updatePressure()">send</button></td>
+    </tr>
+</table>
+
+<br><br>
+
+<h2>Farm Management</h2>
+<table>
+    <tr>
+        <td>Air Cooler:</td>
+        <td><button id="sendTemperature" onclick="updateTemperature()">OFF</button></td>
+    </tr>
+
+    <tr>
+        <td>Humidifier:</td>
+        <td><button id="Humidifier" onclick="onPress()">OFF</button></td>
+    </tr>
+
+    <tr>
+        <td>Water Spray:</td>
+        <td><button id="WaterSpray" onclick="onPress()">OFF</button></td>
     </tr>
 </table>
