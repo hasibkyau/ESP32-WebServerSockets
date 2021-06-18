@@ -20,7 +20,7 @@ WebSocketsServer webSocket = WebSocketsServer(1337);
 char msg_buf[10];
 int led_state = 0;
 int temp = 22;
-float humidity = 100.1;
+float Humidity = 100.1;
 char temp_buf[10];
 
 /***********************************************************
@@ -62,7 +62,7 @@ void onWebSocketEvent(uint8_t client_num,
         digitalWrite(led_pin, HIGH);
         delay(100);
         digitalWrite(led_pin, LOW);
-
+        
         // Report the state of the LED
       } else if ( strcmp((char *)payload, "getLEDState") == 0 ) {
         sprintf(msg_buf, "%d", led_state);
@@ -116,12 +116,16 @@ void onPageNotFound(AsyncWebServerRequest *request) {
 */
 
 void setup() {
+
+
+  // Start Serial port
+  Serial.begin(115200);
+  Serial.println("hello Hasib");
+    
   // Init LED and turn off
   pinMode(led_pin, OUTPUT);
   digitalWrite(led_pin, LOW);
 
-  // Start Serial port
-  Serial.begin(115200);
 
   // Make sure we can read the file system
   if ( !SPIFFS.begin()) {
@@ -144,6 +148,18 @@ void setup() {
   // On HTTP request for style sheet, provide style.css
   server.on("/style.css", HTTP_GET, onCSSRequest);
 
+
+  server.on("/temperature", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send_P(200, "text/plain", "15");
+  });
+/*  
+  server.on("/humidity", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send_P(200, "text/plain", readBME280Humidity().c_str());
+  });
+  server.on("/pressure", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send_P(200, "text/plain", readBME280Pressure().c_str());
+  });
+*/
   // Handle requests for pages that do not exist
   server.onNotFound(onPageNotFound);
 
@@ -162,4 +178,6 @@ void loop() {
 
   // Look for and handle WebSocket data
   webSocket.loop();
+  //String c = readBME280Temperature();
+  //Serial.println(c);
 }
