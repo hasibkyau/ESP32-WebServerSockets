@@ -2,6 +2,7 @@
 #include <SPIFFS.h>
 #include <ESPAsyncWebServer.h>
 #include <WebSocketsServer.h>
+#include "bme.h"
 
 // Constants
 const char *ssid = "ESP32-AP";
@@ -62,7 +63,7 @@ void onWebSocketEvent(uint8_t client_num,
         digitalWrite(led_pin, HIGH);
         delay(100);
         digitalWrite(led_pin, LOW);
-        
+
         // Report the state of the LED
       } else if ( strcmp((char *)payload, "getLEDState") == 0 ) {
         sprintf(msg_buf, "%d", led_state);
@@ -121,7 +122,9 @@ void setup() {
   // Start Serial port
   Serial.begin(115200);
   Serial.println("hello Hasib");
-    
+
+  bme_setup();
+
   // Init LED and turn off
   pinMode(led_pin, OUTPUT);
   digitalWrite(led_pin, LOW);
@@ -142,28 +145,6 @@ void setup() {
   Serial.print("My IP address: ");
   Serial.println(WiFi.softAPIP());
 
-  // On HTTP request for root, provide index.html file
-  server.on("/", HTTP_GET, onIndexRequest);
-
-  // On HTTP request for style sheet, provide style.css
-  server.on("/style.css", HTTP_GET, onCSSRequest);
-
-
-  server.on("/temperature", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send_P(200, "text/plain", "15");
-  });
-/*  
-  server.on("/humidity", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send_P(200, "text/plain", readBME280Humidity().c_str());
-  });
-  server.on("/pressure", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send_P(200, "text/plain", readBME280Pressure().c_str());
-  });
-*/
-  // Handle requests for pages that do not exist
-  server.onNotFound(onPageNotFound);
-
-
 
   // Start web server
   server.begin();
@@ -172,6 +153,26 @@ void setup() {
   webSocket.begin();
   webSocket.onEvent(onWebSocketEvent);
 
+  // On HTTP request for root, provide index.html file
+  server.on("/", HTTP_GET, onIndexRequest);
+
+  // On HTTP request for style sheet, provide style.css
+  server.on("/style.css", HTTP_GET, onCSSRequest);
+
+
+  server.on("/temperature", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send_P(200, "text/plain", readBME280Temperature().c_str());
+  });
+
+  server.on("/humidity", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send_P(200, "text/plain", readBME280Humidity().c_str());
+  });
+  server.on("/pressure", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send_P(200, "text/plain", readBME280Pressure().c_str());
+  });
+
+  // Handle requests for pages that do not exist
+  server.onNotFound(onPageNotFound);
 }
 
 void loop() {
