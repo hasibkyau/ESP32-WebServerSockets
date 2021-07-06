@@ -162,21 +162,51 @@
 
     // Call the init function as soon as the page loads
     window.addEventListener("load", init, false);
-/*
+//get temperature
     setInterval(function () {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
-        var x = (new Date()).getTime();
+       // var x = (new Date()).getTime();
         var y = parseFloat(this.responseText);
         var temp = y;
         console.log(this.responseText);
+        document.getElementById("TemperatureCell").innerHTML = y;
       }
     };
     xhttp.open("GET", "/temperature", true);
     xhttp.send();
   }, 3000);
-*/
+
+  setInterval(function () {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+       // var x = (new Date()).getTime(),
+      var y = parseFloat(this.responseText);
+      var hum = y;
+      document.getElementById("HumidityCell").innerHTML = y;
+      }
+    };
+    xhttp.open("GET", "/humidity", true);
+    xhttp.send();
+  }, 3000);
+
+  setInterval(function () {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        //var x = (new Date()).getTime(),
+        var y = parseFloat(this.responseText);
+        var press = y;
+        //console.log(this.responseText);
+        document.getElementById("PressureCell").innerHTML = y;
+      }
+    };
+    xhttp.open("GET", "/pressure", true);
+    xhttp.send();
+  }, 3000);
+
 
 </script>
 
